@@ -1,0 +1,10 @@
+appdaemon:
+  latitude: 52.379189
+  longitude: 4.899431
+  elevation: 2
+  time_zone: Europe/London
+  plugins:
+    HASS:
+      type: hass
+      ha_url: http://192.168.1.100:8123
+      token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIzZjQ2MWJkMGQzOTA0ZjlhYWFhZjkwMGY4ZjhiZDQwMSIsImlhdCI6MTYzODM5NDk5OCwiZXhwIjoxOTUzNzU0OTk4fQ.pNTbAOw4FQExiizEz8jkMdHCW3wcpbRnlp0jzlalHz4

@@ -1,5 +1,4 @@
-states_csv = "E:/thesillyhomedb/states.csv"
-
+states_csv = "C:/Users/lcmch/.repo/thesillyhome/database/act_states.csv"
 """
 full list of domains
 "sun",
@@ -71,3 +70,12 @@ sensors = [
 ]
 
 devices = actuators + sensors
+
+sensors_lux = [
+    "sensor.0x00158d0001e4ad46_illuminance_lux",
+    "sensor.0x00158d00066941c9_illuminance_lux",
+    "sensor.bedroom_entrance_illuminance_lux",
+    "sensor.livingroom_desk_sensor_illuminance_lux",
+]
+
+auth_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI3ZmQ4YjhjNTk0MGQ0ZTc4OWM3NGI3MzRkOGY3OTk1ZSIsImlhdCI6MTYzODMxNzA3MSwiZXhwIjoxOTUzNjc3MDcxfQ.cMUulvijriSCAobTfFpzH7xoUmN5QgofNVX0S6tNCS8"
