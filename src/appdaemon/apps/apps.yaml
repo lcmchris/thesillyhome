@@ -1,0 +1,7 @@
+hello_world:
+  module: hello
+  class: HelloWorld
+
+model_executor:
+  module: model_executor
+  class: ModelExecutor
