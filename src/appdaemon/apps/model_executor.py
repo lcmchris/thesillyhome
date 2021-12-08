@@ -1,5 +1,5 @@
 import appdaemon.plugins.hass.hassapi as hass
-from src.model_creator import configuration
+from model_creator import configuration
 
 
 class ModelExecutor(hass.Hass):
