@@ -12,18 +12,27 @@ import os
 from sklearn.metrics import accuracy_score
 import pickle
 
+
+cur_dir = os.path.dirname(__file__)
+model_name = 'base'
 # Generate feature and output vectors from act states.
 df_act_states = pd.read_csv(configuration.states_csv)
 # quick remove of created field
 output_list = ["entity_id", "state"]
-feature_list = list(df_act_states.columns)
-# Remove output vectors
-for output in output_list:
-    feature_list.remove(output)
+act_list = list(set(df_act_states.columns) - set(output_list))
 
 for actuator in configuration.actuators:
     df_act = df_act_states[df_act_states["entity_id"] == actuator]
     output_vector = df_act["entity_id"] + df_act["state"]
+
+    # the actuators state should not affect the model
+    feature_list = []
+    for feature in act_list:
+        if feature.startswith(actuator):
+            feature_list.append(feature)
+
+    feature_list = list(set(act_list) -  set(feature_list))
+
     feature_vector = df_act[feature_list]
 
     # Split into random training and test set
@@ -36,7 +45,6 @@ for actuator in configuration.actuators:
 
     model_tree = DecisionTreeClassifier(min_samples_split=20, random_state=99)
     model_tree.fit(X, y)
-
     def visualize_tree(tree, feature_names):
         """Create tree png using graphviz.
 
@@ -45,13 +53,13 @@ for actuator in configuration.actuators:
         tree -- scikit-learn DecsisionTree.
         feature_names -- list of feature names.
         """
-        with open(f"{actuator}.dot", "w") as f:
+        with open(f"{cur_dir}/tree_image/{actuator}.dot", "w") as f:
             export_graphviz(tree, out_file=f, feature_names=feature_names)
 
-        command = ["dot", "-Tpng", f"{actuator}.dot", "-o", f"{actuator}.png"]
+        command = ["dot", "-Tpng", f"{cur_dir}/tree_image/{actuator}.dot", "-o", f"{actuator}.png"]
         try:
             subprocess.check_call(command)
-            os.remove(f"{actuator}.dot")
+            os.remove(f"{cur_dir}/tree_image/{actuator}.dot")
         except:
             exit("Could not run dot, ie graphviz, to produce visualization")
 
@@ -64,7 +72,9 @@ for actuator in configuration.actuators:
 
     # Save model to disk
     filename = open(
-        f"{configuration.home}/src/model_creator/src/model_creator/model/{actuator}.pickle",
+        f"{cur_dir}/model/{model_name}/{actuator}.pickle",
         "wb",
     )
     pickle.dump(model_tree, filename)
+
+# %%

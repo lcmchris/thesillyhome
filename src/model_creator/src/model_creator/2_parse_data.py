@@ -12,7 +12,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier as ClassificationModel
 from sklearn.metrics import accuracy_score
 from sklearn.impute import SimpleImputer
-
+import copy
+from tqdm import tqdm
 """
 Our data base currently stores by events.
 To create a valid ML classification case, we will parse all last
@@ -20,42 +21,40 @@ sensor states for each actuator event and append it to the dataframe.
 """
 
 df_states = homedb().get_data("states").copy()
+df_states = df_states[df_states["entity_id"].isin(configuration.devices)].copy()
+
 df_sen_states = df_states[df_states["entity_id"].isin(configuration.sensors)].copy()
 df_act_states = df_states[df_states["entity_id"].isin(configuration.actuators)].copy()
 
+number_act_states = len(df_act_states)
+
+df_output = copy.deepcopy(df_act_states)
+df_output = df_output[df_output['state']!='unavailable']
+
 for sensor in configuration.sensors:
-    df_act_states[sensor] = ""
+    df_output[sensor] = ""
 
-
-for index, row in df_act_states.iterrows():
-    target = configuration.sensors
+for index, row in tqdm(df_output.iterrows(),total=df_output.shape[0]):
+    target = configuration.devices
     created_time = row["created"]
-    for sensor in target:
-        if not df_sen_states[
-            (df_sen_states["entity_id"] == sensor)
-            & (df_sen_states["created"] < created_time)
-        ].empty:
-            df_act_states.loc[index, sensor] = (
-                df_sen_states[
-                    (df_sen_states["entity_id"] == sensor)
-                    & (df_sen_states["created"] < created_time)
-                ]
-                .head(1)["state"]
-                .values
-            )
+    for device in target:
+        last_device_state = df_states[
+            (df_states["entity_id"] == device)
+            & (df_states["created"] < created_time)
+            & (df_states["state"] != 'unavailable')
+        ]
+        if not last_device_state.empty:
+            df_output.loc[index, device] = last_device_state['state'].iloc[0]
         else:
-            df_act_states.loc[index, sensor] = np.NaN
+            df_output.loc[index, device] = np.NaN
 
 """
 Code to add one hot encoding for date time.
 This will help give features for time of day and day of the week.
 """
-
-# df_act_states["second"] = df_act_states["created"].dt.minute
-# df_act_states["minute"] = df_act_states["created"].dt.minute
-df_act_states["hour"] = df_act_states["created"].dt.hour
-df_act_states["weekday"] = df_act_states["created"].dt.date.apply(lambda x: x.weekday())
-df_act_states = df_act_states.drop(columns=["created"])
+df_output["hour"] = df_output["created"].dt.hour
+df_output["weekday"] = df_output["created"].dt.date.apply(lambda x: x.weekday())
+df_output = df_output.drop(columns=["created"])
 
 
 # Hot encoding for all features
@@ -67,19 +66,20 @@ def one_hot_encoder(df: DataFrame, column: str) -> DataFrame:
 
 
 output_list = ["entity_id", "state"]
-feature_list = list(df_act_states.columns)
-for output in output_list:
-    feature_list.remove(output)
+feature_list = list(set(df_output.columns) - set(output_list))
+
 for feature in feature_list:
     # For lux sensors, these are already in Int format so no encoding.
     if feature not in configuration.sensors_lux:
-        df_act_states = one_hot_encoder(df_act_states, feature)
+        df_output = one_hot_encoder(df_output, feature)
 
 # Remove some empty entity_id rows
-df_act_states = df_act_states[df_act_states["entity_id"] != ""]
+df_output = df_output[df_output["entity_id"] != ""]
 
 # Lux sensors has 'unknown values' which need to be removed
 for lux in configuration.sensors_lux:
-    df_act_states[lux] = df_act_states[lux].replace([np.NaN, "unknown", ""], 0)
+    df_output[lux] = df_output[lux].replace([np.NaN, "unknown", ""], 0)
 
-df_act_states.to_csv(configuration.states_csv, index=False)
+df_output.to_csv(configuration.states_csv, index=False)
+
+# %%
