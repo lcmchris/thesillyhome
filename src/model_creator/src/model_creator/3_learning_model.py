@@ -12,9 +12,8 @@ import os
 from sklearn.metrics import accuracy_score
 import pickle
 
-
 cur_dir = os.path.dirname(__file__)
-model_name = 'base'
+model_name = "base"
 # Generate feature and output vectors from act states.
 df_act_states = pd.read_csv(configuration.states_csv)
 # quick remove of created field
@@ -31,7 +30,7 @@ for actuator in configuration.actuators:
         if feature.startswith(actuator):
             feature_list.append(feature)
 
-    feature_list = list(set(act_list) -  set(feature_list))
+    feature_list = list(set(act_list) - set(feature_list))
 
     feature_vector = df_act[feature_list]
 
@@ -43,8 +42,12 @@ for actuator in configuration.actuators:
         X, y, test_size=0.2, random_state=170
     )  # 2)
 
+    sample_weight = np.ones(len(X_train))
+    sample_weight[: int(len(sample_weight) * 0.5)] = 3
+
     model_tree = DecisionTreeClassifier(min_samples_split=20, random_state=99)
-    model_tree.fit(X, y)
+    model_tree.fit(X_train, y_train, sample_weight)
+
     def visualize_tree(tree, feature_names):
         """Create tree png using graphviz.
 
@@ -56,7 +59,13 @@ for actuator in configuration.actuators:
         with open(f"{cur_dir}/tree_image/{actuator}.dot", "w") as f:
             export_graphviz(tree, out_file=f, feature_names=feature_names)
 
-        command = ["dot", "-Tpng", f"{cur_dir}/tree_image/{actuator}.dot", "-o", f"{actuator}.png"]
+        command = [
+            "dot",
+            "-Tpng",
+            f"{cur_dir}/tree_image/{actuator}.dot",
+            "-o",
+            f"{actuator}.png",
+        ]
         try:
             subprocess.check_call(command)
             os.remove(f"{cur_dir}/tree_image/{actuator}.dot")
@@ -68,7 +77,9 @@ for actuator in configuration.actuators:
     # Get predictions of model
     y_tree_predictions = model_tree.predict(X_test)
     # Extract predictions for each output variable and calculate accuracy and f1 score
-    print(accuracy_score(y_test, y_tree_predictions) * 100)
+    print(
+        f"{actuator} accuracy score: {accuracy_score(y_test, y_tree_predictions) * 100}"
+    )
 
     # Save model to disk
     filename = open(
