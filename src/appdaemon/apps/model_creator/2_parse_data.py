@@ -80,6 +80,8 @@ df_act_states = df_act_states[df_act_states["entity_id"] != ""]
 
 # Lux sensors has 'unknown values' which need to be removed
 for lux in configuration.sensors_lux:
-    df_act_states[lux] = df_act_states[lux].replace([np.NaN, "unknown", ""], 0)
+    df_act_states[lux] = df_act_states[lux].replace(
+        [np.NaN, "unknown", "", "unavailable"], 0
+    )
 
 df_act_states.to_csv(configuration.states_csv, index=False)

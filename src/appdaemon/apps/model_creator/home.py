@@ -1,6 +1,5 @@
 import mysql.connector
 import pandas as pd
-from pandas_profiling import ProfileReport
 from datetime import datetime
 import configuration
 
