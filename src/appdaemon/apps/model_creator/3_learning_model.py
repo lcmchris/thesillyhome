@@ -18,6 +18,7 @@ model_name = "base"
 df_act_states = pd.read_csv(configuration.states_csv)
 # quick remove of created field
 output_list = ["entity_id", "state"]
+<<<<<<< HEAD:src/model_creator/src/model_creator/3_learning_model.py
 act_list = list(set(df_act_states.columns) - set(output_list))
 
 for actuator in configuration.actuators:
@@ -32,7 +33,19 @@ for actuator in configuration.actuators:
 
     feature_list = list(set(act_list) - set(feature_list))
 
+=======
+feature_list = list(df_act_states.columns)
+
+# Remove output vectors
+for output in output_list:
+    feature_list.remove(output)
+
+for actuator in configuration.actuators:
+    df_act = df_act_states[df_act_states["entity_id"] == actuator]
+    output_vector = df_act["entity_id"] + "::" + df_act["state"]
+>>>>>>> master:src/appdaemon/apps/model_creator/3_learning_model.py
     feature_vector = df_act[feature_list]
+    print(len(feature_vector.columns))
 
     # Split into random training and test set
     X = feature_vector
@@ -62,6 +75,7 @@ for actuator in configuration.actuators:
         command = [
             "dot",
             "-Tpng",
+<<<<<<< HEAD:src/model_creator/src/model_creator/3_learning_model.py
             f"{cur_dir}/tree_image/{actuator}.dot",
             "-o",
             f"{actuator}.png",
@@ -69,6 +83,17 @@ for actuator in configuration.actuators:
         try:
             subprocess.check_call(command)
             os.remove(f"{cur_dir}/tree_image/{actuator}.dot")
+=======
+            f"{actuator}.dot",
+            "-o",
+            f"{configuration.home}/src/appdaemon/apps/model/{actuator}.png",
+        ]
+        try:
+            subprocess.check_call(command)
+            os.remove(
+                f"{configuration.home}/src/appdaemon/apps/model_creator/{actuator}.dot"
+            )
+>>>>>>> master:src/appdaemon/apps/model_creator/3_learning_model.py
         except:
             exit("Could not run dot, ie graphviz, to produce visualization")
 
@@ -83,9 +108,17 @@ for actuator in configuration.actuators:
 
     # Save model to disk
     filename = open(
+<<<<<<< HEAD:src/model_creator/src/model_creator/3_learning_model.py
         f"{cur_dir}/model/{model_name}/{actuator}.pickle",
         "wb",
     )
     pickle.dump(model_tree, filename)
 
+=======
+        f"{configuration.home}/src/appdaemon/apps/model/{actuator}.pickle", "wb"
+    )
+    pickle.dump(model_tree, filename)
+
+
+>>>>>>> master:src/appdaemon/apps/model_creator/3_learning_model.py
 # %%

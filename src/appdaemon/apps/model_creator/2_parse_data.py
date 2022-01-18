@@ -61,6 +61,14 @@ df_all = homedb().get_data("states")
 df_states = df_all[df_all["entity_id"].isin(configuration.devices)]
 df_act_states = df_all[df_all["entity_id"].isin(configuration.actuators)]
 
+<<<<<<< HEAD:src/model_creator/src/model_creator/2_parse_data.py
+=======
+# Lux sensors has 'unknown values' which need to be removed
+for lux in configuration.sensors_lux:
+    df_act_states[lux] = df_act_states[lux].replace(
+        [np.NaN, "unknown", "", "unavailable"], 0
+    )
+>>>>>>> master:src/appdaemon/apps/model_creator/2_parse_data.py
 
 if __name__ == "__main__":
     """
