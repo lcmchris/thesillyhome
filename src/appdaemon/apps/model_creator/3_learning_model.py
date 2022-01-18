@@ -17,14 +17,16 @@ df_act_states = pd.read_csv(configuration.states_csv)
 # quick remove of created field
 output_list = ["entity_id", "state"]
 feature_list = list(df_act_states.columns)
+
 # Remove output vectors
 for output in output_list:
     feature_list.remove(output)
 
 for actuator in configuration.actuators:
     df_act = df_act_states[df_act_states["entity_id"] == actuator]
-    output_vector = df_act["entity_id"] + df_act["state"]
+    output_vector = df_act["entity_id"] + "::" + df_act["state"]
     feature_vector = df_act[feature_list]
+    print(len(feature_vector.columns))
 
     # Split into random training and test set
     X = feature_vector
@@ -48,10 +50,18 @@ for actuator in configuration.actuators:
         with open(f"{actuator}.dot", "w") as f:
             export_graphviz(tree, out_file=f, feature_names=feature_names)
 
-        command = ["dot", "-Tpng", f"{actuator}.dot", "-o", f"{actuator}.png"]
+        command = [
+            "dot",
+            "-Tpng",
+            f"{actuator}.dot",
+            "-o",
+            f"{configuration.home}/src/appdaemon/apps/model/{actuator}.png",
+        ]
         try:
             subprocess.check_call(command)
-            os.remove(f"{actuator}.dot")
+            os.remove(
+                f"{configuration.home}/src/appdaemon/apps/model_creator/{actuator}.dot"
+            )
         except:
             exit("Could not run dot, ie graphviz, to produce visualization")
 
@@ -64,7 +74,9 @@ for actuator in configuration.actuators:
 
     # Save model to disk
     filename = open(
-        f"{configuration.home}/src/model_creator/src/model_creator/model/{actuator}.pickle",
-        "wb",
+        f"{configuration.home}/src/appdaemon/apps/model/{actuator}.pickle", "wb"
     )
     pickle.dump(model_tree, filename)
+
+
+# %%
