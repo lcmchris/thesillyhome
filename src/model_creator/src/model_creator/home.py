@@ -1,6 +1,5 @@
 import mysql.connector
 import pandas as pd
-from pandas_profiling import ProfileReport
 from datetime import datetime
 import configuration
 
@@ -27,8 +26,8 @@ class homedb:
         mycursor = mydb.cursor(dictionary=True)
         if table == "states":
             query = "SELECT entity_id, state,\
-                created from \
-                homeassistant.states ORDER BY created DESC;"
+                created, state_id, old_state_id from \
+                homeassistant.states ORDER BY created ASC;"
 
         mycursor.execute(query)
         myresult = mycursor.fetchall()
