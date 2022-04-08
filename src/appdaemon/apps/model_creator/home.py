@@ -10,10 +10,10 @@ import configuration
 
 class homedb:
     def __init__(self):
-        self.host = "34.255.195.220"
+        self.host = "192.168.1.100"
         self.port = "3306"
-        self.user = "lcmchris"
-        self.password = "1Bittermelon."
+        self.user = "homeassistant"
+        self.password = "urY8BTmQJD7eZuDM"
 
     def get_data(self, table: str):
         assert table in ["states"], "Table not valid."

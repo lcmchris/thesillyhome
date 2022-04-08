@@ -1,9 +1,9 @@
-#%%
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 import subprocess
 import configuration
+import numpy as np
 import os
 from sklearn.metrics import accuracy_score
 import pickle
@@ -11,33 +11,31 @@ import pickle
 
 def visualize_tree(tree, feature_names):
     """Create tree png using graphviz.
-
     Args
     ----
     tree -- scikit-learn DecsisionTree.
     feature_names -- list of feature names.
     """
-    with open(f"{actuator}.dot", "w") as f:
+    with open(f"{cur_dir}/model/{actuator}.dot", "w") as f:
         export_graphviz(tree, out_file=f, feature_names=feature_names)
 
     command = [
         "dot",
         "-Tpng",
-        f"{actuator}.dot",
+        f"model/{actuator}.dot",
         "-o",
-        f"{configuration.home}/src/appdaemon/apps/model/{actuator}.png",
+        f"{cur_dir}/model/{actuator}.png",
     ]
     try:
         subprocess.check_call(command)
-        os.remove(
-            f"{configuration.home}/src/appdaemon/apps/model_creator/{actuator}.dot"
-        )
+        os.remove(f"{cur_dir}/model/{actuator}.dot")
     except:
         exit("Could not run dot, ie graphviz, to produce visualization")
 
 
 if __name__ == "__main__":
-
+    cur_dir = os.path.dirname(__file__)
+    model_name = "base"
     # Generate feature and output vectors from act states.
     df_act_states = pd.read_csv(configuration.states_csv)
     # quick remove of created field
@@ -62,18 +60,24 @@ if __name__ == "__main__":
             X, y, test_size=0.2, random_state=170
         )  # 2)
 
+        sample_weight = np.ones(len(X_train))
+        sample_weight[: int(len(sample_weight) * 0.5)] = 3
+
         model_tree = DecisionTreeClassifier(min_samples_split=20, random_state=99)
-        model_tree.fit(X, y)
+        model_tree.fit(X_train, y_train, sample_weight)
 
         visualize_tree(model_tree, feature_list)
 
         # Get predictions of model
         y_tree_predictions = model_tree.predict(X_test)
         # Extract predictions for each output variable and calculate accuracy and f1 score
-        print(accuracy_score(y_test, y_tree_predictions) * 100)
+        print(
+            f"{actuator} accuracy score: {accuracy_score(y_test, y_tree_predictions) * 100}"
+        )
 
         # Save model to disk
         filename = open(
             f"{configuration.home}/src/appdaemon/apps/model/{actuator}.pickle", "wb"
         )
         pickle.dump(model_tree, filename)
+    print("Completed!")
