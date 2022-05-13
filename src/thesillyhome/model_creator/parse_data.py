@@ -89,13 +89,18 @@ def convert_unavailabe(df: DataFrame) -> DataFrame:
 
     ['entity_id','states']
     """
+    print(tsh_config.float_sensors)
     df["state"] = np.where(
         (df["entity_id"].isin(tsh_config.float_sensors))
-        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"]), 0, df["state"])
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"])),
+        0,
+        df["state"],
     )
     df["state"] = np.where(
         (~df["entity_id"].isin(tsh_config.float_sensors))
-        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"]), "off", df["state"])
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"])),
+        "off",
+        df["state"],
     )
     return df
 
@@ -109,15 +114,14 @@ def parse_data_from_db(actuators: list, sensors: list):
 
     print("Reading from homedb...")
     df_all = homedb().get_data()
+    df_all = convert_unavailabe(df_all)
+
     print("Add previous state...")
     devices = actuators + sensors
     df_states = df_all[df_all["entity_id"].isin(devices)]
     df_act_states = df_all[df_all["entity_id"].isin(actuators)]
 
-    number_act_states = len(df_act_states)
-
     df_output = copy.deepcopy(df_act_states)
-    df_output = convert_unavailabe(df_output)
 
     print("Start parallelization processing...")
 
