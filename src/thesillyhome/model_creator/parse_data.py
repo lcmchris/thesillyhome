@@ -9,6 +9,7 @@ from tqdm import tqdm
 import numpy as np
 from multiprocessing import cpu_count
 import os
+import read_config_json as tsh_config
 
 
 def parallelize_dataframe(df1, df2, devices, func):
@@ -36,11 +37,9 @@ def add_device_states(df_output: pd.DataFrame, df_states: pd.DataFrame, devices,
             & (df_states["state"] != "unavailable")
         ]
         if not last_device_state.empty:
-            df_output.loc[index, "last_state"] = (
-                last_device_state["entity_id"].iloc[0]
-                + "_"
-                + last_device_state["state"].iloc[0]
-            )
+            df_output.loc[
+                index, "last_state"
+            ] = f"{last_device_state['entity_id'].iloc[0]}_{last_device_state['state'].iloc[0]}"
         else:
             df_output.loc[index, "last_state"] = np.NaN
 
@@ -83,27 +82,42 @@ def one_hot_encoder(df: DataFrame, column: str) -> DataFrame:
     return df
 
 
-#%%
+def convert_unavailabe(df: DataFrame) -> DataFrame:
+    """
+    The fact is if a device such as a light bulb is powered off,
+    After a timeframe (availability_timeout), it is set to the 'unavailable' status
 
-def parse_data_from_db(actuators:list, sensors:list):
+    ['entity_id','states']
+    """
+    df["state"] = np.where(
+        (df["entity_id"].isin(tsh_config.float_sensors))
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"]), 0, df["state"])
+    )
+    df["state"] = np.where(
+        (~df["entity_id"].isin(tsh_config.float_sensors))
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"]), "off", df["state"])
+    )
+    return df
+
+
+def parse_data_from_db(actuators: list, sensors: list):
     """
     Our data base currently stores by events.
     To create a valid ML classification case, we will parse all last
     sensor states for each actuator event and append it to the dataframe.
     """
-    cur_dir = os.path.dirname(__file__)
 
     print("Reading from homedb...")
     df_all = homedb().get_data()
     print("Add previous state...")
-    devices = actuators+sensors
+    devices = actuators + sensors
     df_states = df_all[df_all["entity_id"].isin(devices)]
     df_act_states = df_all[df_all["entity_id"].isin(actuators)]
 
     number_act_states = len(df_act_states)
 
     df_output = copy.deepcopy(df_act_states)
-    df_output = df_output[df_output["state"] != "unavailable"]
+    df_output = convert_unavailabe(df_output)
 
     print("Start parallelization processing...")
 
@@ -114,26 +128,23 @@ def parse_data_from_db(actuators:list, sensors:list):
     This will help give features for time of day and day of the week.
     """
     df_output["hour"] = df_output["last_changed"].dt.hour
-    df_output["weekday"] = df_output["last_changed"].dt.date.apply(lambda x: x.weekday())
+    df_output["weekday"] = df_output["last_changed"].dt.date.apply(
+        lambda x: x.weekday()
+    )
     df_output = df_output.drop(columns=["last_changed"])
 
     output_list = ["entity_id", "state", "last_changed", "duplicate"]
     feature_list = sorted(list(set(df_output.columns) - set(output_list)))
 
-    sensors_lux = [sensor for sensor in sensors if sensor.split("_")[-1]=='lux']
+    float_sensors = tsh_config.float_sensors
     for feature in feature_list:
-        # For lux sensors, these are already in Int format so no encoding.
-        if feature not in sensors_lux:
+        # For float sensors, these are already in Int format so no encoding.
+        if feature not in float_sensors:
             df_output = one_hot_encoder(df_output, feature)
 
     # Remove some empty entity_id rows
     df_output = df_output[df_output["entity_id"] != ""]
 
-    # Lux sensors has 'unknown values' which need to be removed
-    for lux in sensors_lux:
-        df_output[lux] = df_output[lux].replace(
-            [np.NaN, "unknown", "", "unavailable"], 0
-        )
     df_output.to_csv(
-        f"/data/act_states.csv", index=True, index_label="index"
+        f"{tsh_config.data_dir}/act_states.csv", index=True, index_label="index"
     )

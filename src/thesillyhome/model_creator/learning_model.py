@@ -7,6 +7,7 @@ import numpy as np
 import os
 from sklearn.metrics import accuracy_score
 import pickle
+import read_config_json as tsh_config
 
 def visualize_tree(tree, actuators, feature_names,model_name_version):
     """Create tree png using graphviz.
@@ -15,19 +16,19 @@ def visualize_tree(tree, actuators, feature_names,model_name_version):
     tree -- scikit-learn DecsisionTree.
     feature_names -- list of feature names.
     """
-    with open(f"/data/model/{model_name_version}/{actuator}.dot", "w") as f:
+    with open(f"{tsh_config.data_dir}/model/{model_name_version}/{actuator}.dot", "w") as f:
         export_graphviz(tree, out_file=f, feature_names=feature_names)
 
     command = [
         "dot",
         "-Tpng",
-        f"/data/model/{model_name_version}/{actuator}.dot",
+        f"{tsh_config.data_dir}/model/{model_name_version}/{actuator}.dot",
         "-o",
-        f"/data/model/{model_name_version}/{actuator}.png",
+        f"{tsh_config.data_dir}/model/{model_name_version}/{actuator}.png",
     ]
     try:
         subprocess.check_call(command)
-        os.remove(f"/data/model/{model_name_version}/{actuator}.dot")
+        os.remove(f"{tsh_config.data_dir}/model/{model_name_version}/{actuator}.dot")
     except:
         exit("Could not run dot, ie graphviz, to produce visualization")
 
@@ -35,7 +36,7 @@ def train_model(actuators:list, model_name_version):
     cur_dir = os.path.dirname(__file__)
     # Generate feature and output vectors from act states.
     df_act_states = pd.read_csv(
-        f"/data/act_states.csv", index_col=False
+        f"{tsh_config.data_dir}/act_states.csv", index_col=False
     ).drop(columns=["index"])
 
     output_list = ["entity_id", "state", "last_changed"]
@@ -96,7 +97,7 @@ def train_model(actuators:list, model_name_version):
         )
 
         # Save model to disk
-        model_directory = f'/data/model/{model_name_version}'
+        model_directory = f'{tsh_config.data_dir}/model/{model_name_version}'
         os.makedirs(model_directory, exist_ok=True)
 
         filename = open(f"{model_directory}/{actuator}.pickle", "wb")

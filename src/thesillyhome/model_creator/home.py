@@ -9,9 +9,6 @@ import thesillyhome.model_creator.read_config_json as tsh_config
   Get data from DB and store locally
 """
 
-cur_dir = os.path.dirname(__file__)
-
-
 class homedb:
     def __init__(self):
         self.host = tsh_config.db_host
@@ -36,7 +33,7 @@ class homedb:
         mycursor.execute(query)
         myresult = mycursor.fetchall()
         df = pd.DataFrame.from_dict(myresult)
-        df.to_csv(f"/data/all_states.csv")
+        df.to_csv(f"{tsh_config.data_dir}/all_states.csv")
         return df
 
     def store_data(self, table: str):
