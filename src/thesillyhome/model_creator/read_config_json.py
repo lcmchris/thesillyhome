@@ -1,5 +1,4 @@
 import json
-import os
 
 """
 This is the config yaml:
@@ -25,7 +24,7 @@ This is the config yaml:
 env = "DEV"
 # Opening default options JSON file
 if env == "DEV":
-    data_dir = "data_cache"
+    data_dir = "data_test"
 else:
     data_dir = "/data"
 

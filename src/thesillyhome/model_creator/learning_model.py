@@ -1,13 +1,14 @@
-from ensurepip import bootstrap
+# Library imports
+import os
+import subprocess
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
-import subprocess
 import numpy as np
-import os
 from sklearn.metrics import accuracy_score
 import pickle
-import read_config_json as tsh_config
+# Local application imports
+import thesillyhome.model_creator.read_config_json as tsh_config
 
 def visualize_tree(tree, actuators, feature_names,model_name_version):
     """Create tree png using graphviz.

@@ -1,9 +1,11 @@
-from unicodedata import name
+# Library imports
+from datetime import datetime
 import mysql.connector
 import pandas as pd
-from datetime import datetime
-import os
+# Local application imports
 import thesillyhome.model_creator.read_config_json as tsh_config
+
+
 
 """
   Get data from DB and store locally

@@ -1,5 +1,5 @@
+# Library imports
 from pandas.core.frame import DataFrame
-from thesillyhome.model_creator.home import homedb
 import pandas as pd
 import numpy as np
 import copy
@@ -8,8 +8,9 @@ import tqdm
 from tqdm import tqdm
 import numpy as np
 from multiprocessing import cpu_count
-import os
-import read_config_json as tsh_config
+# Local application imports
+from thesillyhome.model_creator.home import homedb
+import thesillyhome.model_creator.read_config_json as tsh_config
 
 
 def parallelize_dataframe(df1, df2, devices, func):
