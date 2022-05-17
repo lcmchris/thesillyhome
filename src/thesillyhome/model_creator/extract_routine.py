@@ -1,9 +1,11 @@
-import pickle
-from sklearn.tree import _tree
-import configuration
+# Library imports
 import os
 import pandas as pd
 import numpy as np
+# Local application imports
+import pickle
+from sklearn.tree import _tree
+
 
 
 def tree_to_code(tree, feature_names):

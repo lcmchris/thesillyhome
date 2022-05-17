@@ -1,5 +1,4 @@
 import json
-import os
 
 """
 This is the config yaml:
@@ -22,10 +21,10 @@ This is the config yaml:
    'Test_id_2': 'Times New Roman',
 ...
 """
-env = "DEV"
+env = "PROD"
 # Opening default options JSON file
 if env == "DEV":
-    data_dir = "data_cache"
+    data_dir = "data_test"
 else:
     data_dir = "/data"
 
