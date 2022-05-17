@@ -21,7 +21,7 @@ This is the config yaml:
    'Test_id_2': 'Times New Roman',
 ...
 """
-env = "DEV"
+env = "PROD"
 # Opening default options JSON file
 if env == "DEV":
     data_dir = "data_test"
