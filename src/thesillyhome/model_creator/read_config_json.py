@@ -21,7 +21,7 @@ This is the config yaml:
    'Test_id_2': 'Times New Roman',
 ...
 """
-env = "PROD"
+env = "DEV"
 # Opening default options JSON file
 if env == "DEV":
     data_dir = "data_test"
@@ -45,12 +45,14 @@ model_name = "Base"
 model_version = "0.0.0"
 model_name_version = f"{model_name}_{model_version}"
 
-def extract_float_sensors(sensors:list):
+
+def extract_float_sensors(sensors: list):
     float_sensors_types = ["lux"]
     float_sensors = []
     for sensor in sensors:
         if sensor.split("_")[-1] in float_sensors_types:
             float_sensors.append(sensor)
     return float_sensors
+
 
 float_sensors = extract_float_sensors(sensors)

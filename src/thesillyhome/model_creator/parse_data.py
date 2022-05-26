@@ -8,6 +8,7 @@ import tqdm
 from tqdm import tqdm
 import numpy as np
 from multiprocessing import cpu_count
+
 # Local application imports
 from thesillyhome.model_creator.home import homedb
 import thesillyhome.model_creator.read_config_json as tsh_config
@@ -30,12 +31,12 @@ def add_device_states(df_output: pd.DataFrame, df_states: pd.DataFrame, devices,
 
     for index, row in df_output.iterrows():
 
-        # Add last_state onto dataframe as trigger
+        # Add last_state non-float onto dataframe as trigger
         last_device_state = df_states[
             (df_states["entity_id"].isin(devices))
             & (df_states["entity_id"] != row["entity_id"])
             & (df_states["last_changed"] < row["last_changed"])
-            & (df_states["state"] != "unavailable")
+            & ~(df_states["entity_id"].isin(tsh_config.float_sensors))
         ]
         if not last_device_state.empty:
             df_output.loc[
@@ -47,7 +48,6 @@ def add_device_states(df_output: pd.DataFrame, df_states: pd.DataFrame, devices,
         last_current_device_state = df_states[
             (df_states["entity_id"] == row["entity_id"])
             & (df_states["last_changed"] < row["last_changed"])
-            & (df_states["state"] != "unavailable")
         ]
 
         # Value actual state changes more!
@@ -64,13 +64,15 @@ def add_device_states(df_output: pd.DataFrame, df_states: pd.DataFrame, devices,
             previous_device_state = df_states[
                 (df_states["entity_id"] == device)
                 & (df_states["last_changed"] < row["last_changed"])
-                & (df_states["state"] != "unavailable")
             ]
 
             if not previous_device_state.empty:
                 df_output.loc[index, device] = previous_device_state["state"].iloc[0]
             else:
-                df_output.loc[index, device] = np.NaN
+                if device in tsh_config.float_sensors:
+                    df_output.loc[index, device] = 0
+                else:
+                    df_output.loc[index, device] = "off"
         pbar.update(1)
     return df_output
 
@@ -90,16 +92,15 @@ def convert_unavailabe(df: DataFrame) -> DataFrame:
 
     ['entity_id','states']
     """
-    print(tsh_config.float_sensors)
     df["state"] = np.where(
         (df["entity_id"].isin(tsh_config.float_sensors))
-        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"])),
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable", None])),
         0,
         df["state"],
     )
     df["state"] = np.where(
         (~df["entity_id"].isin(tsh_config.float_sensors))
-        & (df["state"].isin([np.NaN, "unknown", "", "unavailable"])),
+        & (df["state"].isin([np.NaN, "unknown", "", "unavailable", None])),
         "off",
         df["state"],
     )
@@ -116,6 +117,7 @@ def parse_data_from_db(actuators: list, sensors: list):
     print("Reading from homedb...")
     df_all = homedb().get_data()
     df_all = convert_unavailabe(df_all)
+    assert ~df_all.isnull().values.any(), df_all[df_all["state"].isnull()]
 
     print("Add previous state...")
     devices = actuators + sensors
@@ -149,6 +151,15 @@ def parse_data_from_db(actuators: list, sensors: list):
 
     # Remove some empty entity_id rows
     df_output = df_output[df_output["entity_id"] != ""]
+
+    assert ~df_output.isnull().values.any(), df_output[
+        df_output["sensor.corridor_entrance_sensor_illuminance_lux"].isnull()
+    ]
+    assert ~df_output.isin([np.inf, -np.inf, np.nan]).values.any()
+
+    # assert df_output[[list(set(df_output.columns) - set(output_list))]].isnan().any()
+    # df_output = df_output.replace([np.inf, -np.inf], np.nan)
+    # df_output = df_output.fillna(999)
 
     df_output.to_csv(
         f"{tsh_config.data_dir}/act_states.csv", index=True, index_label="index"
