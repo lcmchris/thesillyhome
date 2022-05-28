@@ -132,4 +132,5 @@ dmypy.json
 *.csv
 *.pickle
 *.png
+*.json
 secrets.yaml
