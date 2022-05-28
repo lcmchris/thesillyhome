@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "thesillyhome"
-version = "0.1.8"
+version = "0.2.4"
 description = ""
 authors = ["Chrisopher Lai"]
 license = "Apache 2.0"
