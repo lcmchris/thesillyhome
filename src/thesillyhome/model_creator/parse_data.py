@@ -140,7 +140,7 @@ def parse_data_from_db(actuators: list, sensors: list):
     )
     df_output = df_output.drop(columns=["last_changed"])
 
-    output_list = tsh_config.output_list
+    output_list = tsh_config.output_list.copy()
     output_list.append("duplicate")
     feature_list = sorted(list(set(df_output.columns) - set(output_list)))
 

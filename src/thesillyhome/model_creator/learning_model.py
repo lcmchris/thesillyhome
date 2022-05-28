@@ -48,7 +48,7 @@ def train_model(actuators: list, model_name_version):
     df_act_states = df_act_states.replace([np.inf, -np.inf], np.nan)
     df_act_states = df_act_states.fillna(999)
 
-    output_list = tsh_config.output_list
+    output_list = tsh_config.output_list.copy()
     act_list = list(set(df_act_states.columns) - set(output_list))
 
     for actuator in actuators:
