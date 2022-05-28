@@ -50,6 +50,7 @@ def train_model(actuators: list, model_name_version):
 
     output_list = tsh_config.output_list
     act_list = list(set(df_act_states.columns) - set(output_list))
+
     for actuator in actuators:
         print(f"Training model for {actuator}")
 
