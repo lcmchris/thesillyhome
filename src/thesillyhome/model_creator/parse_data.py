@@ -140,7 +140,7 @@ def parse_data_from_db(actuators: list, sensors: list):
     )
     df_output = df_output.drop(columns=["last_changed"])
 
-    output_list = ["entity_id", "state", "last_changed", "duplicate"]
+    output_list = tsh_config.output_list
     feature_list = sorted(list(set(df_output.columns) - set(output_list)))
 
     float_sensors = tsh_config.float_sensors
@@ -156,10 +156,6 @@ def parse_data_from_db(actuators: list, sensors: list):
         df_output["sensor.corridor_entrance_sensor_illuminance_lux"].isnull()
     ]
     assert ~df_output.isin([np.inf, -np.inf, np.nan]).values.any()
-
-    # assert df_output[[list(set(df_output.columns) - set(output_list))]].isnan().any()
-    # df_output = df_output.replace([np.inf, -np.inf], np.nan)
-    # df_output = df_output.fillna(999)
 
     df_output.to_csv(
         f"{tsh_config.data_dir}/act_states.csv", index=True, index_label="index"
