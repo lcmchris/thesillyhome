@@ -57,4 +57,4 @@ def extract_float_sensors(sensors: list):
 
 float_sensors = extract_float_sensors(sensors)
 
-output_list = ["entity_id", "state", "last_changed", "duplicate"]
+output_list = ["entity_id", "state", "last_changed"]
